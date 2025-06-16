@@ -1,0 +1,235 @@
+import React from "react";
+import Button from "../components/Button";
+
+const Cart = ({ cart, updateQuantity, totalPrice, handleSubmitOrder }) => (
+  <div className="p-6">
+    <h2 className="text-2xl font-bold mb-4">Cart</h2>
+    {cart.map((item) => (
+      <div key={item.id} className="flex justify-between items-center mb-2">
+        <span>
+          {item.name} x {item.quantity}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => updateQuantity(item.id, -1)}>-</Button>
+          <span>
+           {item.quantity}
+        </span>
+          <Button onClick={() => updateQuantity(item.id, 1)}>+</Button>
+        </div>
+      </div>
+    ))}
+    <div className="font-bold mt-4">Total: ${totalPrice.toFixed(2)}</div>
+    <Button className="mt-4" onClick={handleSubmitOrder}>
+      Proceed to Summary
+    </Button>
+  </div>
+);
+
+export default Cart;import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { Card, CardContent } from "../components/Card";
+import Button from "../components/Button";
+
+const foodItems = [
+  {
+    id: 1,
+    name: "Burger",
+    description: "A juicy grilled beef patty with fresh lettuce and tomato.",
+    price: 5.99,
+    image:
+      "https://v.cdn.ww.com/media/system/cms/ca/burgers_masthead_0_tyuynj.jpg?auto=webp&optimize=medium",
+    type: "non-veg",
+  },
+  {
+    id: 2,
+    name: "Pizza",
+    description: "Cheesy margherita pizza with fresh basil.",
+    price: 8.49,
+    image:
+      "https://th.bing.com/th/id/OIP.6bt46FU7n5jU3aZUHK3GfwHaE8?rs=1&pid=ImgDetMain",
+    type: "veg",
+  },
+  {
+    id: 3,
+    name: "Sushi",
+    description: "Fresh salmon and avocado sushi rolls.",
+    price: 10.99,
+    image:
+      "https://www.thespruceeats.com/thmb/IzejeJObvz4lvYpW06uwhX6iR00%3D/3680x2456/filters:fill(auto%2C1)/GettyImages-Ridofranz-1053855542-60b89644efd2470fbfb6475b175064df.jpg",
+    type: "non-veg",
+  },
+];
+
+const sliderImages = [
+  "https://wallpapers.com/images/featured/food-4k-1pf6px6ryqfjtnyr.jpg",
+  "https://wallpapers.com/images/high/food-4k-peec114e1yl8sh69.webp",
+  "https://wallpapers.com/images/hd/food-4k-spdnpz7bhmx4kv2r.jpg",
+];
+
+const FoodMenu = () => {
+  const [filter, setFilter] = useState("all");
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [cart, setCart] = useState([]);
+
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const filteredItems =
+    filter === "all"
+      ? foodItems
+      : foodItems.filter((item) => item.type === filter);
+
+  const handleSliderChange = (e) => {
+    const value = parseInt(e.target.value);
+    if (value === 0) setFilter("all");
+    if (value === 1) setFilter("veg");
+    if (value === 2) setFilter("non-veg");
+  };
+
+  const getSliderColor = () => {
+    if (filter === "veg") return "accent-green-500";
+    if (filter === "non-veg") return "accent-red-500";
+    return "accent-blue-500";
+  };
+
+  const getFilterLabel = () => {
+    if (filter === "veg") return "Veg";
+    if (filter === "non-veg") return "Non-Veg";
+    return "All";
+  };
+
+  const addToCart = (item) => {
+    setCart((prevCart) => {
+      const existingItem = prevCart.find((cartItem) => cartItem.id === item.id);
+      if (existingItem) {
+        return prevCart.map((cartItem) =>
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        );
+      } else {
+        return [...prevCart, { ...item, quantity: 1 }];
+      }
+    });
+  };
+
+  const updateQuantity = (itemId, delta) => {
+    setCart((prevCart) => {
+      return prevCart
+        .map((item) =>
+          item.id === itemId
+            ? { ...item, quantity: item.quantity + delta }
+            : item
+        )
+        .filter((item) => item.quantity > 0);
+    });
+  };
+
+  const getQuantity = (itemId) => {
+    const itemInCart = cart.find((item) => item.id === itemId);
+    return itemInCart ? itemInCart.quantity : 0;
+  };
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % sliderImages.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="p-6 grid gap-6">
+      <h1 className="text-3xl font-bold text-center">Food Menu</h1>
+
+      <div className="w-full  overflow-hidden rounded-xl shadow-md">
+        <img
+          src={sliderImages[currentSlide]}
+          alt="slider"
+          className="w-full  object-containz transition-all duration-500"
+        />
+      </div>
+
+      <div className="flex justify-end mt-6 relative">
+        <Link to="/cart" className="relative">
+          <Button>
+            Go to Cart
+            {cartItemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                {cartItemCount}
+              </span>
+            )}
+          </Button>
+        </Link>
+      </div>
+
+      <div className="flex flex-col items-center mb-6">
+        <label htmlFor="filterSlider" className="mb-2 font-medium">
+          Filter: {getFilterLabel()}
+        </label>
+        <input
+          id="filterSlider"
+          type="range"
+          min="0"
+          max="2"
+          step="1"
+          value={filter === "veg" ? 1 : filter === "non-veg" ? 2 : 0}
+          onChange={handleSliderChange}
+          className={`w-48 ${getSliderColor()}`}
+        />
+        <div className="flex justify-between w-48 text-sm mt-1">
+          <span>All</span>
+          <span>Veg</span>
+          <span>Non-Veg</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {filteredItems.map((item) => (
+          <Card
+            key={item.id}
+            className="rounded-3xl shadow-xl bg-white hover:shadow-2xl transition-shadow duration-300 flex flex-row md:flex-col min-h-[150px]"
+          >
+            <div className="overflow-hidden rounded-l-3xl md:rounded-t-3xl w-1/3 md:w-full h-full">
+              <img
+                src={item.image}
+                alt={item.name}
+                className="h-full md:h-48 w-full object-cover scale-100 hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+            <CardContent className="p-4 sm:p-3 space-y-2 w-2/3 md:w-full flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg sm:text-base font-bold text-gray-800">
+                  {item.name}
+                </h3>
+                <p className="text-xs sm:text-[11px] text-gray-600 leading-snug">
+                  {item.description}
+                </p>
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <span className="text-sm sm:text-xs font-bold text-green-600">
+                  ${item.price.toFixed(2)}
+                </span>
+                {getQuantity(item.id) > 0 ? (
+                  <div className="flex items-center gap-2">
+                    <Button onClick={() => updateQuantity(item.id, -1)}>-</Button>
+                    <span>{getQuantity(item.id)}</span>
+                    <Button onClick={() => updateQuantity(item.id, 1)}>+</Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={() => addToCart(item)}
+                    className="px-3 py-1 sm:text-xs"
+                  >
+                    Add
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default FoodMenu;make the cart functional according to the  
+
