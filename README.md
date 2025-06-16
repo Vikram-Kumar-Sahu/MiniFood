@@ -61,4 +61,4 @@ A responsive, single-page food ordering application built with **React.js** and 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/Vikram-Kumar-Sahu/MiniFood.git
-   cd mini-food-ordering-app
+   cd MiniFood
